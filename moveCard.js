@@ -1,5 +1,4 @@
 var targetFolderId = request.params.targetFolderId;//目标文件夹id
-// var targetFolderHideFlag  = request.params.targetFolderHideFlag;//目标文件夹的隐藏属性
 var userCardId = request.params.userCardId;//当前UserCard卡片id
 var userId = request.params.userId;//当前操作用户
 
