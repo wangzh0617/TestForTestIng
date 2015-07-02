@@ -3,10 +3,7 @@ var targetFolderId = request.params.targetFolderId;//目标文件夹id
 var userCardId = request.params.userCardId;//当前UserCard卡片id
 var userId = request.params.userId;//当前操作用户
 
-
-
 var currentFolderId;//当前文件夹id
-
 
 var globalCurrentFolder = null;//当前文件夹对象
 var globalTargetFolder = null;//目标文件夹对象
@@ -24,7 +21,7 @@ try{
 	//查询当前卡片是否已经移动到目标文件夹
 	var userCardInFolder =new AV.Promise(function(resolve, reject){
 		var userCardQuery =new AV.Query("UserCard");
-	    userCardQuery.equalTo("delFlag", 0);
+	  userCardQuery.equalTo("delFlag", 0);
 		userCardQuery.get(userCardId,{
 			success:function(userCard){
 				currentFolderId = userCard.get("folderId");//将此文件夹id赋值给全局文件夹id
@@ -32,9 +29,9 @@ try{
 					if (userId===userCard.get("userId")) {
 						resolve(userCard);
 					}else{
-						reject("不能移动，当前userId!=卡片userId");
+						reject("不能移动，因为当前操作用户与卡片用户不相同。");
 					}
-				    
+
 				}else{
 					reject("不能移动到此文件夹,因为文件夹相同");//已经移动了
 				}
@@ -45,7 +42,7 @@ try{
 		});
 	});
 
-    userCardInFolder.then(function(userCard){
+  userCardInFolder.then(function(userCard){
 		console.log("userCard===id="+userCard.id);
 		return;
 	},function(error){
@@ -55,7 +52,7 @@ try{
 		//查询目标卡片
 		var queryTargetFolder =new AV.Promise(function(resolve, reject){
 			var tarFolderQuery =new AV.Query("Folder");
-		    tarFolderQuery.equalTo("delFlag", 0);
+		  tarFolderQuery.equalTo("delFlag", 0);
 			tarFolderQuery.get(targetFolderId,{
 			  success: function(object) {
 			    // object is an instance of AV.Object.
@@ -76,7 +73,7 @@ try{
 		var queryCurrentFolder =new AV.Promise(function(resolve, reject){
 
 			var currentFolderQuery =new AV.Query("Folder");
-		    currentFolderQuery.equalTo("delFlag", 0);
+		  currentFolderQuery.equalTo("delFlag", 0);
 			currentFolderQuery.get(currentFolderId,{
 			  success: function(object) {
 			    // object is an instance of AV.Object.
@@ -91,45 +88,41 @@ try{
 			    reject();
 			  }
 			});
-
 		});
 		return queryCurrentFolder.then();
 	}).then(function(){
-	
 		var saveAllData =new AV.Promise(function(resolve, reject){
 			var saveAllFolder = [];
-	        //如果当前文件夹id和传进来的文件夹id不相同才会走到这一步
-
-	        //将当前usercard的文件夹修改成目标文件夹
+      //如果当前文件夹id和传进来的文件夹id不相同才会走到这一步
+      //将当前usercard的文件夹修改成目标文件夹
 			console.log("当前folderid==="+currentFolderId);
 			var userCard = new UserCard();
 			userCard.set("objectId",userCardId);
 			userCard.set("folderId",targetFolderId);
-
 			if (globalTargetFolder.get("hideFlag")===0) {//隐藏
 				userCard.set("hideFlag",0);
-            }else{//不隐藏
+      }else{//不隐藏
 				userCard.set("hideFlag",1);
-            }
-
+      }
 			saveAllFolder.push(userCard);
+
 			//当前文件夹的卡片量-1
 			var currentFolder = new Folder();
 			currentFolder.set("objectId",currentFolderId);
 			currentFolder.increment("cardCnt",-1);
 			saveAllFolder.push(currentFolder);
+
 			//目标文件夹的卡片量+1
 			var targetFolder = new Folder();
 			targetFolder.set("objectId",targetFolderId);
 			targetFolder.increment("cardCnt",1);
 			saveAllFolder.push(targetFolder);
+
 			//保存所有
 			AV.Object.saveAll(saveAllFolder, function(list, error) {
 				    if (list) {
-				      // All the objects were saved.
 				      resolve();
 				    } else {
-				      // An error occurred.
 				      reject();
 				    }
 				});
@@ -156,14 +149,13 @@ try{
 		}
 	}).then(function(tagUserCards){
 		if (isContiue===0) {//继续更改标签数量
-
 			var saveAllTagData =new AV.Promise(function(resolve, reject){
 				var tagPromiseArray = [];
 	            for (var i = 0; i < tagUserCards.length; i++) {
 	                var tuc = tagUserCards[i];//找到的当前卡片的标签
 	                var tagUpdate = new Tag();
 	                tagUpdate.set("objectId",tuc.get("tagId"));
-	                if (globalTargetFolder.get("hideFlag")===0) {//隐藏
+	                 if (globalTargetFolder.get("hideFlag")===0) {//隐藏
 	                    tagUpdate.increment("sharedCnt",-1);
 	                }else{//不隐藏
 	                    tagUpdate.increment("sharedCnt",1);
@@ -192,7 +184,7 @@ try{
 				var changeUser = new User();
 				changeUser.set('objectId',userId);
 				if (globalTargetFolder.get("hideFlag")===0) {
-					//如果目标文件夹的隐藏标志是0（隐藏），那么就把用户的隐藏卡片数量+1，同时共享卡片数量-1		
+					//如果目标文件夹的隐藏标志是0（隐藏），那么就把用户的隐藏卡片数量+1，同时共享卡片数量-1
 					changeUser.increment('shareCardCnt',-1);
 					changeUser.increment('hideCardCnt',1);
 				}else{
@@ -203,13 +195,13 @@ try{
 				changeUser.save(null, {
 						  success: function(ui) {
 						    // Execute any logic that should take place after the object is saved.
-		            		console.log("creat-UserImport创建成功了");
+						    console.log("moveCard-修改用户卡片数量成功");
 						   resolve();
 						  },
 						  error: function(ui, error) {
 						    // Execute any logic that should take place if the save fails.
 						    // error is a AV.Error with an error code and description.
-						    console.log("creat-UserImport创建失败了");
+						    console.log("moveCard-修改用户卡片数量失败");
 						   reject();
 						  }
 						});
@@ -221,7 +213,7 @@ try{
 	}).then(function(){
 		response.success(global.SUCCESS);
 	},function(error){
-		response.error(error.message);
+		response.error("移动失败:"+error.message);
 	});
 
 }catch(error){

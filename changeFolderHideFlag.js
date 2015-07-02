@@ -1,4 +1,4 @@
-try{ 
+try{
     // throw new Error("暂时停用此接口，正在修复中");//folderId
     var folderId = request.params.folderId;
     //userId
@@ -78,11 +78,11 @@ try{
                                 console.log("tagPromiseArray---tag-->"+tagPromiseArray.length);//
                                 return AV.Object.saveAll(tagPromiseArray,null);
                             });
-                        };
+                        });
                         userCardQueryPromise.push(userCardQueryPromiseFor);
-                    }//
+                    }//第二for结束
                     return AV.Promise.when(userCardQueryPromise);
-                });//
+                });//第一个for结束
             });//new 的promise结束
             folderUserCard.push(childUserCardPromise);
         }
@@ -114,7 +114,7 @@ try{
             var changeUserFolder = new User();
             changeUserFolder.set('objectId',userId);
             if (targetHideFlag===0) {
-                //如果目标文件夹的隐藏标志是0（隐藏），那么就把用户的隐藏卡片数量+1，同时共享卡片数量-1     
+                //如果目标文件夹的隐藏标志是0（隐藏），那么就把用户的隐藏卡片数量+1，同时共享卡片数量-1
                 changeUserFolder.increment('shareFolderCnt',-1);
                 changeUserFolder.increment('hideFolderCnt',1);
             }else{
@@ -142,6 +142,8 @@ try{
     },function(error){
         response.error("修改失败");
     });
+
+
 }catch(error){
     response.error(error);
 }
